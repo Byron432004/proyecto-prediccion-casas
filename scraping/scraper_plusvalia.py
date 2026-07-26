@@ -17,7 +17,7 @@ urls_ciudad = [
 
 lista_casas = []
 
-print("🚀 Iniciando scraping multi-ciudad con URLs exactas y Reinicio de Sesión...")
+print("Iniciando scraping de plusvalia.com")
 
 for city in urls_ciudad:
     # Si la ruta es "guayas/guayaquil", tomamos lo que está después de la barra "/" -> "Guayaquil"
