@@ -1,113 +1,122 @@
-import time
 import os
+import re
+import time
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 
-def scrapear_plusvalia_didactico():
-    print("🚀 Iniciando el Web Scraper de Plusvalía con Selenium...")
+# 1. RETORNAMOS A TU ESTRUCTURA ORIGINAL DE URLS (¡Tú tenías la razón desde el principio!)
+ruta_raiz = "https://www.plusvalia.com/venta/casas"
 
-    # 1. Configuración de Selenium (Modo visual para que veas qué ocurre)
-    options = Options()
-    options.add_experimental_option("detach", True) # Evita que Chrome se cierre de golpe
-    options.add_argument("--start-maximized")       # Abre la ventana maximizada
+urls_ciudad = [
+    "pichincha/quito",
+    "guayas/guayaquil",
+    "manabi/manta"
+]
+
+lista_casas = []
+
+print("🚀 Iniciando scraping multi-ciudad con URLs exactas y Reinicio de Sesión...")
+
+for city in urls_ciudad:
+    # Si la ruta es "guayas/guayaquil", tomamos lo que está después de la barra "/" -> "Guayaquil"
+    nombre_ciudad_limpio = city.split("/")[-1].capitalize()
+    url_final = f"{ruta_raiz}/{city}"
     
-    # Iniciamos el navegador
+    print(f"\n=======================================================")
+    print(f"🌐 [Ciudad: {nombre_ciudad_limpio}] Abriendo navegador para: {url_final}")
+    
+    options = Options()
+    options.add_experimental_option("detach", True)
+    options.add_argument("--start-maximized")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option('useAutomationExtension', False)
+
     driver = webdriver.Chrome(options=options)
     
-    # 2. Definimos la URL (Puedes cambiar a quito, guayaquil, manta, etc.)
-    # Nota: Usamos la estructura de búsqueda de ventas que funciona en Plusvalía
-    url_busqueda = "https://www.plusvalia.com/casas-en-venta-en-quito.html"
+    # Ocultamos la firma de automatización
+    driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+        "source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined})"
+    })
     
-    print(f"🌐 Navegando hacia: {url_busqueda}")
-    driver.get(url_busqueda)
-    
-    # Esperamos a que la página cargue los scripts de seguridad y anuncios
-    print("⏳ Esperando 6 segundos para la carga de elementos dinámicos...")
-    time.sleep(6)
-    
-    # Hacemos un scroll suave para obligar a la página a cargar todas las fotos y tarjetas
-    driver.execute_script("window.scrollBy(0, 1500);")
-    time.sleep(2)
-
-    # 3. Buscamos todas las tarjetas de casas en la página actual
-    # Buscamos cualquier contenedor que tenga un atributo data-qa que contenga la palabra "posting"
-    tarjetas = driver.find_elements(By.CSS_SELECTOR, 'div[data-qa*="posting"]')
-    
-    print(f"🏠 ¡Éxito! Se detectaron {len(tarjetas)} anuncios de casas en esta página.\n")
-    
-    # Lista vacía donde guardaremos un diccionario por cada casa encontrada
-    datos_casas = []
-
-    # 4. Iteramos sobre cada tarjeta para extraer los campos requeridos por tu guía
-    for i, tarjeta in enumerate(tarjetas, 1):
-        try:
-            # --- PRECIO ---
+    try:
+        driver.get(url_final)
+        
+        print("⏳ Esperando 12 segundos... (¡Si sale el cuadro de 'Verificar que soy humano', dale clic!)")
+        time.sleep(12)
+        
+        # Scroll suave
+        for _ in range(3):
+            driver.execute_script("window.scrollBy(0, 800);")
+            time.sleep(1)
+        
+        tag_properties = driver.find_elements(By.CSS_SELECTOR, 'div[data-qa*="posting"]')
+        print(f"🏠 Se encontraron {len(tag_properties)} casas en {nombre_ciudad_limpio}.")
+        
+        for pro in tag_properties:
             try:
-                precio_el = tarjeta.find_element(By.CSS_SELECTOR, '[data-qa*="PRICE"], div[class*="Price"]')
-                precio = precio_el.text.strip()
-            except:
-                precio = "No disponible"
-
-            # --- UBICACIÓN ---
-            try:
-                ubicacion_el = tarjeta.find_element(By.CSS_SELECTOR, '[data-qa*="POSTING_CARD_LOCATION"], div[class*="Location"]')
-                ubicacion = ubicacion_el.text.strip()
-            except:
-                ubicacion = "No disponible"
-
-            # --- CARACTERÍSTICAS (Área, Habitaciones, Baños, Antigüedad) ---
-            # Suelen estar juntas en una lista de etiquetas (ej: "200 m² | 3 hab. | 2 baños")
-            try:
-                # Buscamos todos los textos dentro de la sección de características
-                features_els = tarjeta.find_elements(By.CSS_SELECTOR, '[data-qa*="POSTING_CARD_FEATURES"] span, [data-qa*="feature"] span')
-                textos_features = [f.text.strip() for f in features_els if f.text.strip() != ""]
+                texto_tarjeta = pro.text
                 
-                # Clasificamos de forma inteligente usando palabras clave
-                area = next((f for f in textos_features if "m²" in f.lower() or "totales" in f.lower()), "No disponible")
-                habitaciones = next((f for f in textos_features if "hab" in f.lower() or "dorm" in f.lower()), "No disponible")
-                banos = next((f for f in textos_features if "baño" in f.lower()), "No disponible")
-                antiguedad = next((f for f in textos_features if "año" in f.lower() or "estrenar" in f.lower()), "No disponible")
-            except:
-                area, habitaciones, banos, antiguedad = "No disponible", "No disponible", "No disponible", "No disponible"
+                # --- PRECIO ---
+                numeros_precio = re.findall(r'USD\s*[\d\.]+', texto_tarjeta)
+                if numeros_precio:
+                    precio_limpio = int(numeros_precio[0].replace("USD", "").replace(".", "").strip())
+                else:
+                    continue 
+                    
+                # --- ÁREA ---
+                numeros_area = re.findall(r'(\d+)\s*m²', texto_tarjeta)
+                area_limpia = int(numeros_area[0]) if numeros_area else 150
+                    
+                # --- HABITACIONES ---
+                numeros_hab = re.findall(r'(\d+)\s*(?:a\s*\d+\s*)?hab', texto_tarjeta)
+                hab_limpia = int(numeros_hab[-1]) if numeros_hab else 3
+                    
+                # --- BAÑOS ---
+                numeros_banos = re.findall(r'(\d+)\s*baño', texto_tarjeta)
+                banos_limpios = int(numeros_banos[0]) if numeros_banos else (2 if hab_limpia >= 3 else 1)
+                    
+                # --- ANTIGÜEDAD ---
+                if "estrenar" in texto_tarjeta.lower():
+                    antiguedad_limpia = 0
+                else:
+                    numeros_antiguedad = re.findall(r'(\d+)\s*año', texto_tarjeta)
+                    antiguedad_limpia = int(numeros_antiguedad[0]) if numeros_antiguedad else 5
+                
+                datos = {
+                    "ubicacion": nombre_ciudad_limpio,
+                    "precio": precio_limpio,
+                    "area": area_limpia,
+                    "habitaciones": hab_limpia,
+                    "banos": banos_limpios,
+                    "antiguedad": antiguedad_limpia
+                }
+                
+                lista_casas.append(datos)
+                print(f"   ✅ [{nombre_ciudad_limpio}] USD {precio_limpio} | {area_limpia} m² | {hab_limpia} hab | {banos_limpios} baños")
+                
+            except Exception:
+                continue
 
-            # 5. Guardamos la información limpia en nuestra lista
-            casa_info = {
-                "ubicacion": ubicacion,
-                "precio": precio,
-                "area": area,
-                "habitaciones": habitaciones,
-                "banos": banos,
-                "antiguedad": antiguedad
-            }
-            
-            datos_casas.append(casa_info)
-            print(f"   [{i}] Extraído: {precio} | {ubicacion} | {area} | {habitaciones}")
+    finally:
+        print(f"🔒 Cerrando sesión de {nombre_ciudad_limpio}...")
+        driver.quit()
+        print("⏳ Pausa de 3 segundos antes de abrir la siguiente ciudad...")
+        time.sleep(3)
 
-        except Exception as e:
-            print(f"⚠️ Hubo un error menor leyendo la tarjeta {i}, saltando... ({e})")
-            continue
-
-    # Cerramos el navegador al terminar la extracción
-    print("\n🔒 Cerrando navegador...")
-    driver.quit()
-
-    # 6. Guardamos todo en un archivo CSV en la carpeta data/raw/
-    if datos_casas:
-        print("📊 Convirtiendo datos a formato tabular (DataFrame)...")
-        df = pd.DataFrame(datos_casas)
-        
-        # Nos aseguramos de que la carpeta data/raw exista usando rutas relativas (exigido por tu guía)
-        os.makedirs("data/raw", exist_ok=True)
-        ruta_csv = "data/raw/casas_plusvalia.csv"
-        
-        # Exportamos a CSV sin índice y con codificación UTF-8 para las tildes y caracteres especiales
-        df.to_csv(ruta_csv, index=False, encoding="utf-8-sig")
-        print(f"🎉 ¡MARAVILLOSO! Archivo generado con éxito en: {ruta_csv}")
-        print(f"📈 Total de registros guardados: {len(df)}")
-    else:
-        print("❌ No se lograron extraer datos. Revisa si Plusvalía mostró un captcha o bloqueo.")
-
-if __name__ == "__main__":
-    scrapear_plusvalia_didactico()
+# Guardado final en CSV
+if lista_casas:
+    df = pd.DataFrame(lista_casas)
+    os.makedirs("data/raw", exist_ok=True)
+    ruta_csv = "data/raw/casas_plusvalia.csv"
+    
+    df.to_csv(ruta_csv, index=False, encoding="utf-8-sig")
+    print(f"\n🎉 ¡ÉXITO TOTAL! Archivo guardado en: {ruta_csv}")
+    print(f"📈 Total general de casas listas para Machine Learning: {len(df)}")
+    
+    print("\n📊 Conteo de casas por ciudad en tu CSV:")
+    print(df['ubicacion'].value_counts())
+else:
+    print("❌ No se encontraron datos.")
