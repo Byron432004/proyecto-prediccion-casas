@@ -98,7 +98,7 @@ streamlit run app/streamlit_app.py
 
 * **Supuestos del mercado:** Asume condiciones de oferta y demanda estables a la fecha de captura del web scraping. No contempla variaciones macroeconómicas en tiempo real (inflación, tasa de interés hipotecaria) ni remates judiciales.
 
-# ⚠️ Limitaciones y Supuestos
+# 📁 Estructura del Proyecto
 
 proyecto-prediccion-casas/
 │
