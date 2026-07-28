@@ -95,9 +95,9 @@ for city in urls_ciudad:
                 }
                 
                 lista_casas.append(datos)
-                print(f"   ✅ [{nombre_ciudad_limpio}] USD {precio_limpio} | {area_limpia} m² | {hab_limpia} hab | {banos_limpios} baños")
+                print(f"   ✅ [{nombre_ciudad_limpio}] USD {precio_limpio} | {area_limpia} m²    | {hab_limpia} hab | {banos_limpios} baños")
                 
-            except Exception:
+            except Exception:  
                 continue
 
     finally:
