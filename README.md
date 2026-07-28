@@ -100,7 +100,9 @@ streamlit run app/streamlit_app.py
 
 # 📁 Estructura del Proyecto
 
----
+El proyecto está dividido en varios archivos y carpetas para facilitar su mantenimiento y manejo:
+
+```
 ```text
 ```text
 📂 proyecto-prediccion-casas/
@@ -129,6 +131,8 @@ streamlit run app/streamlit_app.py
 │
 └── 📁 app/
     └── 🎈 streamlit_app.py
+```
+
 
 # 📊 Ejemplo de Uso
 
