@@ -100,32 +100,35 @@ streamlit run app/streamlit_app.py
 
 # 📁 Estructura del Proyecto
 
-proyecto-prediccion-casas/
+---
+```text
+```text
+📂 proyecto-prediccion-casas/
 │
-├── README.md
-├── requirements.txt
-├── .gitignore
+├── 📄 README.md
+├── 📄 requirements.txt
+├── 📄 .gitignore
 │
-├── data/
-│   ├── raw/
-│   │   └── casas_plusvalia.csv
-│   └── processed/
-│       └── casas_limpias.csv
+├── 📁 data/
+│   ├── 📁 raw/
+│   │   └── 📊 casas_plusvalia.csv
+│   └── 📁 processed/
+│       └── 📊 casas_limpias.csv
 │
-├── scraping/
-│   └── scraper_plusvalia.py
+├── 📁 scraping/
+│   └── 🐍 scraper_plusvalia.py
 │
-├── notebooks/
-│   └── entrenamiento_modelo.ipynb
+├── 📁 notebooks/
+│   └── 📓 entrenamiento_modelo.ipynb
 │
-├── models/
-│   └── modelo_precios.pkl
+├── 📁 models/
+│   └── 🤖 modelo_precios.pkl
 │
-├── api/
-│   └── main.py
+├── 📁 api/
+│   └── ⚡ main.py
 │
-└── app/
-    └── streamlit_app.py
+└── 📁 app/
+    └── 🎈 streamlit_app.py
 
 # 📊 Ejemplo de Uso
 
