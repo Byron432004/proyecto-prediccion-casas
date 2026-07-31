@@ -30,7 +30,7 @@ with col1:
     )
     
     antiguedad = st.number_input(
-        "🏗️ Antigüedad (años):",
+        "📅 Antigüedad (años):",
         min_value=0,
         max_value=100,
         value=5,
@@ -57,7 +57,7 @@ with col2:
 
 st.markdown("---")
 
-# 4. Botón de predicción
+
 if st.button("🚀 Calcular Precio Estimado", use_container_width=True):
     datos_vivienda = {
         "ubicacion": ubicacion,
@@ -86,10 +86,6 @@ if st.button("🚀 Calcular Precio Estimado", use_container_width=True):
                     label="💵 Precio Estimado de la Propiedad:",
                     value=f"USD {precio_final:,.2f}"
                 )
-                
-                # Muestra un pequeño resumen ocultable
-                #with st.expander("🔍 Ver detalles del envío a la API"):
-                    #st.json(datos_vivienda)
                     
             else:
                 st.error(f"⚠️ Error desde la API (Código {respuesta.status_code}): {respuesta.text}")
@@ -100,5 +96,4 @@ if st.button("🚀 Calcular Precio Estimado", use_container_width=True):
         except Exception as e:
             st.error(f"Ocurrió un error inesperado: {str(e)}")
 
-# Pie de página
 st.markdown("<br><hr><center> <small>Byron Nasimba - Diplomado Python Full Stack</small> </center>", unsafe_allow_html=True)
