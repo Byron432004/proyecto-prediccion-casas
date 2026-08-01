@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import os
 
+
 st.set_page_config(
     page_title="Predicción de Precios de Casas",
     page_icon="🏡",
@@ -69,12 +70,12 @@ if st.button("🚀 Calcular Precio Estimado", use_container_width=True):
     }
     
     # URL local del servidor FastAPI
-    url_api = "http://127.0.0.1:8000/predict"
+    url_api = "https://name-prediccion-casas-api.onrender.com/predict"
     
     with st.spinner("Conectando con la API y calculando precio... ⚙️"):
         try:
             # Enviamos la solicitud POST a nuestra API
-            respuesta = requests.post(url_api, json=datos_vivienda, timeout=5)
+            respuesta = requests.post(url_api, json=datos_vivienda, timeout=90)
             
             # Verificamos si la API respondió correctamente (Código 200)
             if respuesta.status_code == 200:
